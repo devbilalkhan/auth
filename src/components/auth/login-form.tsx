@@ -7,19 +7,29 @@ import { useForm } from "react-hook-form";
 
 import { z } from "zod";
 import { Input } from "../ui/input";
-import { cva } from "class-variance-authority";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
 
+import { Label } from "../ui/label";
+
+import SubmitButton from "./submit-button";
+
+import FormError from "./form-error";
+import FormSuccess from "./form-success";
+import FieldErrors from "./field-errors";
+import { login } from "../../../actions/login";
+import { ChangeEvent, useState } from "react";
 type LoginFormProps = {};
 
 function LoginForm({}: LoginFormProps) {
+  const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined>("");
+
   const {
     register,
     trigger,
     formState: { errors },
     getValues,
     setValue,
+    clearErrors,
   } = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -27,6 +37,12 @@ function LoginForm({}: LoginFormProps) {
       password: "",
     },
   });
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    clearErrors(name as "email" | "password");
+    setError("");
+    setSuccess("");
+  };
   return (
     <CardWrapper
       headerLabel="Welcome back"
@@ -37,24 +53,44 @@ function LoginForm({}: LoginFormProps) {
       <form
         className="space-y-4"
         action={async () => {
-          const response = await trigger();
+          const result = await trigger();
+          if (!result) return;
+          const formData = getValues();
+
+          if (formData) {
+            const response = await login(formData);
+            !response.success
+              ? setError(response.data.message)
+              : setSuccess(response.data.message);
+          }
         }}
       >
-        <div className="spave-y-4">
+        <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input type="email" id="email" {...register("email")} />
-          {errors.email && (
-            <p className="text-red-500 text-sm ">{errors.email.message}</p>
-          )}
+          <Input
+            type="email"
+            id="email"
+            {...register("email")}
+            onChange={(e) => {
+              clearErrors("email");
+            }}
+          />
+          {errors.email && <FieldErrors message={errors.email.message} />}
         </div>
-        <div className="space-y-4">
+        <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input type="password" id="password" {...register("password")} />
-          {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password.message}</p>
-          )}
+          <Input
+            type="password"
+            id="password"
+            {...register("password")}
+            className="mt-none"
+            onChange={handleChange}
+          />
+          {errors.password && <FieldErrors message={errors.password.message} />}
         </div>
-        <Button type="submit">Submit</Button>
+        <FormError message={error} />
+        <FormSuccess message={success} />
+        <SubmitButton className="w-full" label="Submit" />
       </form>
     </CardWrapper>
   );

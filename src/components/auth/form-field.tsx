@@ -2,50 +2,36 @@ import { Label } from "@radix-ui/react-label";
 import { UseFormRegister } from "react-hook-form";
 import { LoginSchema, RegisterSchema } from "../../../schemas/schemas";
 import { z } from "zod";
-import type { FieldErrors } from "react-hook-form";
+import type { FieldErrors, Path } from "react-hook-form";
 import { Input } from "../ui/input";
 import { ChangeEvent } from "react";
 
-type FormType = z.infer<typeof LoginSchema | typeof RegisterSchema>;
+const FormSchema = z.union([LoginSchema, RegisterSchema]);
+type FormType = z.infer<typeof FormSchema>;
 
-type FormFieldProps = {
-  message?: string;
+type FormFieldProps<T extends FormType> = {
   label: string;
   type: string;
-  id: string;
-  register: UseFormRegister<FormType>;
+  id: Path<T>;
+  register: UseFormRegister<T>;
   handleChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  errors: FieldErrors<FormType>;
+  errors: FieldErrors<T>;
 };
 
-function FormField({
+function FormField<T extends FormType>({
   type,
   id,
   register,
   errors,
   handleChange,
   label,
-}: FormFieldProps) {
+}: FormFieldProps<T>) {
   return (
-    <div className="space-y-2">
+    <div className="">
       <Label htmlFor={id}>{label}</Label>
-      <Input
-        type={type}
-        id={id}
-        {...register(
-          id as
-            | "email"
-            | "password"
-            | "confirmPassword"
-            | "lastName"
-            | "firstName"
-        )}
-        onChange={handleChange}
-      />
+      <Input type={type} id={id} {...register(id)} onChange={handleChange} />
       {errors[id as keyof typeof errors] && (
-        <FormErrorMessage
-          message={errors[id as keyof typeof errors]?.message as string}
-        />
+        <FormErrorMessage message={errors[id]?.message as string} />
       )}
     </div>
   );
@@ -54,7 +40,7 @@ function FormField({
 export default FormField;
 
 type FormErrorMessageProps = {
-  message: string;
+  message: string | undefined;
 };
 
 function FormErrorMessage({ message }: FormErrorMessageProps) {

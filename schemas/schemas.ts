@@ -8,6 +8,8 @@ export const LoginSchema = z.object({
   password: z.string().min(1, { message: "Valid password is required" }),
 });
 
+
+
 export const RegisterSchema = z.object({
   email: z
     .string()
@@ -35,3 +37,4 @@ export const RegisterSchema = z.object({
       message: "First name must contain only alphabetic characters",
     }),
 });
+

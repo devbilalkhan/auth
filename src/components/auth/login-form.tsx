@@ -3,13 +3,9 @@ import route from "@/app/config/route";
 import CardWrapper from "./card-wrapper";
 import { LoginSchema } from "../../../schemas/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Path, useForm } from "react-hook-form";
 
 import { z } from "zod";
-import { Input } from "../ui/input";
-
-import { Label } from "../ui/label";
-
 import SubmitButton from "./submit-button";
 
 import FormError from "./form-error";
@@ -18,6 +14,7 @@ import FormSuccess from "./form-success";
 import { login } from "../../../actions/login";
 import { ChangeEvent, useState } from "react";
 import FormField from "./form-field";
+import { sleep } from "@/lib/utils";
 type LoginFormProps = {};
 
 function LoginForm({}: LoginFormProps) {
@@ -39,8 +36,8 @@ function LoginForm({}: LoginFormProps) {
     },
   });
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    clearErrors(name as "email" | "password");
+    const { name } = e.target;
+    clearErrors(name as Path<z.infer<typeof LoginSchema>>);
     setError("");
     setSuccess("");
   };
@@ -66,7 +63,7 @@ function LoginForm({}: LoginFormProps) {
           }
         }}
       >
-        <FormField
+        <FormField<z.infer<typeof LoginSchema>>
           register={register}
           label="Email"
           id="email"
@@ -74,7 +71,7 @@ function LoginForm({}: LoginFormProps) {
           handleChange={handleChange}
           errors={errors}
         />
-        <FormField
+        <FormField<z.infer<typeof LoginSchema>>
           register={register}
           label="Password"
           id="password"
